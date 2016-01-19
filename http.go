@@ -10,9 +10,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func startHttpServer(port int) error {
+func startHttpServer(port int, mappings []Mapping) error {
 	r := mux.NewRouter()
-	r.HandleFunc("/machine/ls", toHandlerFunc(runLs))
+
+	for _, mapping := range mappings {
+		r.HandleFunc(mapping.url, toHandlerFunc(mapping.handler))
+	}
 
 	http.ListenAndServe(fmt.Sprintf(":%d", port), r)
 

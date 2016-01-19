@@ -17,7 +17,7 @@ var (
 	errParsePrivateKey = errors.New("Failed to parse private key")
 )
 
-func startSshDaemon(port int) error {
+func startSshDaemon(port int, mappings []Mapping) error {
 	privateBytes, err := ioutil.ReadFile("id_rsa")
 	if err != nil {
 		return errNoPrivateKey
@@ -54,19 +54,19 @@ func startSshDaemon(port int) error {
 
 		log.Printf("New SSH connection from %s (%s)", sshConn.RemoteAddr(), sshConn.ClientVersion())
 		go ssh.DiscardRequests(reqs)
-		go handleChannels(chans)
+		go handleChannels(chans, mappings)
 	}
 
 	return nil
 }
 
-func handleChannels(chans <-chan ssh.NewChannel) {
+func handleChannels(chans <-chan ssh.NewChannel, mappings []Mapping) {
 	for newChannel := range chans {
-		go handleChannel(newChannel)
+		go handleChannel(newChannel, mappings)
 	}
 }
 
-func handleChannel(newChannel ssh.NewChannel) {
+func handleChannel(newChannel ssh.NewChannel, mappings []Mapping) {
 	if t := newChannel.ChannelType(); t != "session" {
 		newChannel.Reject(ssh.UnknownChannelType, fmt.Sprintf("unknown channel type: %s", t))
 		return
@@ -85,13 +85,14 @@ func handleChannel(newChannel ssh.NewChannel) {
 				command := string(req.Payload[4:])
 				req.Reply(true, nil)
 
-				var output []byte
+				var output []byte = []byte("UNKNOWN")
 				var err error
-				if command == "machine/ls" {
-					output, err = toJson(withApi(runLs))
-				} else {
-					fmt.Println(command)
-					output = []byte("UNKNOWN")
+
+				for _, mapping := range mappings {
+					if command == mapping.url {
+						output, err = toJson(withApi(mapping.handler))
+						break
+					}
 				}
 
 				if err != nil {

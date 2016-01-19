@@ -4,7 +4,7 @@ export GO15VENDOREXPERIMENT = 1
 
 build: docker-machine-daemon
 
-docker-machine-daemon: main.go ls/ls.go
+docker-machine-daemon: main.go ls/ls.go http.go ssh.go
 	go build .
 
 deps:

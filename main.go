@@ -15,12 +15,21 @@ const (
 	httpPort = 8080
 )
 
+type Mapping struct {
+	url     string
+	handler func(api libmachine.API) (interface{}, error)
+}
+
 func main() {
+	mappings := []Mapping{
+		{"/machine/ls", runLs},
+	}
+
 	go func() {
 		log.Printf("Listening on %d...\n", sshPort)
-		log.Printf(" - List the Docker Machines with: ssh localhost -p %d -s machine/ls\n", sshPort)
+		log.Printf(" - List the Docker Machines with: ssh localhost -p %d -s /machine/ls\n", sshPort)
 
-		if err := startSshDaemon(sshPort); err != nil {
+		if err := startSshDaemon(sshPort, mappings); err != nil {
 			log.Fatal(err)
 		}
 	}()
@@ -29,7 +38,7 @@ func main() {
 		log.Printf("Listening on %d...\n", httpPort)
 		log.Printf(" - List the Docker Machines with: http GET http://localhost:%d/machine/ls\n", httpPort)
 
-		if err := startHttpServer(httpPort); err != nil {
+		if err := startHttpServer(httpPort, mappings); err != nil {
 			log.Fatal(err)
 		}
 	}()
