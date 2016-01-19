@@ -12,16 +12,12 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-const (
-	sshPort = 2200
-)
-
 var (
 	errNoPrivateKey    = errors.New("Failed to load private key (./id_rsa). You can generate a keypair with 'ssh-keygen -t rsa -f id_rsa'")
 	errParsePrivateKey = errors.New("Failed to parse private key")
 )
 
-func startSshDaemon() error {
+func startSshDaemon(port int) error {
 	privateBytes, err := ioutil.ReadFile("id_rsa")
 	if err != nil {
 		return errNoPrivateKey
@@ -38,13 +34,11 @@ func startSshDaemon() error {
 
 	config.AddHostKey(private)
 
-	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", sshPort))
+	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", port))
 	if err != nil {
-		return fmt.Errorf("Failed to listen on %d (%s)", sshPort, err)
+		return fmt.Errorf("Failed to listen on %d (%s)", port, err)
 	}
 
-	log.Printf("Listening on %d...\n", sshPort)
-	log.Printf(" - List the Docker Machines with: ssh localhost -p %d -s machine/ls\n", sshPort)
 	for {
 		tcpConn, err := listener.Accept()
 		if err != nil {

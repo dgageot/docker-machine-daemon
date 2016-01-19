@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/docker/machine/libmachine"
 
@@ -11,18 +10,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const (
-	httpPort = 8080
-)
-
-func startHttpServer() error {
-	log.Printf("Listening on %d...\n", httpPort)
-	log.Printf(" - List the Docker Machines with: http GET http://localhost:%d/machine/ls\n", httpPort)
-
+func startHttpServer(port int) error {
 	r := mux.NewRouter()
 	r.HandleFunc("/machine/ls", toHandlerFunc(runLs))
 
-	http.ListenAndServe(fmt.Sprintf(":%d", httpPort), r)
+	http.ListenAndServe(fmt.Sprintf(":%d", port), r)
 
 	return nil
 }

@@ -10,15 +10,26 @@ import (
 	"github.com/docker/machine/libmachine/persist"
 )
 
+const (
+	sshPort  = 2200
+	httpPort = 8080
+)
+
 func main() {
 	go func() {
-		if err := startSshDaemon(); err != nil {
+		log.Printf("Listening on %d...\n", sshPort)
+		log.Printf(" - List the Docker Machines with: ssh localhost -p %d -s machine/ls\n", sshPort)
+
+		if err := startSshDaemon(sshPort); err != nil {
 			log.Fatal(err)
 		}
 	}()
 
 	go func() {
-		if err := startHttpServer(); err != nil {
+		log.Printf("Listening on %d...\n", httpPort)
+		log.Printf(" - List the Docker Machines with: http GET http://localhost:%d/machine/ls\n", httpPort)
+
+		if err := startHttpServer(httpPort); err != nil {
 			log.Fatal(err)
 		}
 	}()
