@@ -1,4 +1,4 @@
-package main
+package daemons
 
 import (
 	"fmt"
@@ -15,11 +15,23 @@ import (
 )
 
 var (
-	errNoPrivateKey    = errors.New("Failed to load private key (./id_rsa). You can generate a keypair with 'ssh-keygen -t rsa -f id_rsa'")
+	errNoPrivateKey = errors.New("Failed to load private key (./id_rsa). You can generate a keypair with 'ssh-keygen -t rsa -f id_rsa'")
 	errParsePrivateKey = errors.New("Failed to parse private key")
 )
 
-func startSshDaemon(port int, mappings []handlers.Mapping) error {
+type sshDaemon struct {
+	mappings []handlers.Mapping
+}
+
+// NewSshDaemon create a new ssh daemon with given mappings.
+func NewSshDaemon(mappings []handlers.Mapping) Starter {
+	return &sshDaemon{
+		mappings: mappings,
+	}
+}
+
+// Start startsth ssh daemon.
+func (d *sshDaemon) Start(port int) error {
 	privateBytes, err := ioutil.ReadFile("id_rsa")
 	if err != nil {
 		return errNoPrivateKey
@@ -56,19 +68,19 @@ func startSshDaemon(port int, mappings []handlers.Mapping) error {
 
 		log.Printf("New SSH connection from %s (%s)", sshConn.RemoteAddr(), sshConn.ClientVersion())
 		go ssh.DiscardRequests(reqs)
-		go handleChannels(chans, mappings)
+		go d.handleChannels(chans)
 	}
 
 	return nil
 }
 
-func handleChannels(chans <-chan ssh.NewChannel, mappings []handlers.Mapping) {
+func (d *sshDaemon) handleChannels(chans <-chan ssh.NewChannel) {
 	for newChannel := range chans {
-		go handleChannel(newChannel, mappings)
+		go d.handleChannel(newChannel)
 	}
 }
 
-func handleChannel(newChannel ssh.NewChannel, mappings []handlers.Mapping) {
+func (d *sshDaemon) handleChannel(newChannel ssh.NewChannel) {
 	if t := newChannel.ChannelType(); t != "session" {
 		newChannel.Reject(ssh.UnknownChannelType, fmt.Sprintf("unknown channel type: %s", t))
 		return
@@ -90,9 +102,9 @@ func handleChannel(newChannel ssh.NewChannel, mappings []handlers.Mapping) {
 				var output []byte = []byte("UNKNOWN")
 				var err error
 
-				for _, mapping := range mappings {
+				for _, mapping := range d.mappings {
 					if command == mapping.Url {
-						output, err = toJson(withApi(mapping.Handler))
+						output, err = handlers.ToJson(handlers.WithApi(mapping.Handler))
 						break
 					}
 				}

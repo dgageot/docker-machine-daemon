@@ -1,10 +1,13 @@
-package ls
+package handlers
 
 import (
 	"fmt"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/docker/machine/libmachine"
+	"github.com/docker/machine/libmachine/persist"
 
 	"github.com/docker/machine/commands"
 	"github.com/docker/machine/libmachine/drivers"
@@ -19,7 +22,17 @@ const (
 	StateTimeoutDuration = 10 * time.Second
 )
 
-func GetHostListItems(hostList []*host.Host, hostsInError map[string]error) []commands.HostListItem {
+// RunLs lists all Docker Machines.
+func RunLs(api libmachine.API) (interface{}, error) {
+	hostList, hostInError, err := persist.LoadAllHosts(api)
+	if err != nil {
+		return nil, err
+	}
+
+	return listItems(hostList, hostInError), nil
+}
+
+func listItems(hostList []*host.Host, hostsInError map[string]error) []commands.HostListItem {
 	hostListItems := []commands.HostListItem{}
 	hostListItemsChan := make(chan commands.HostListItem)
 
