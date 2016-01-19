@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/dgageot/docker-machine-daemon/handlers"
+
 	"io/ioutil"
 	"net"
 
@@ -17,7 +19,7 @@ var (
 	errParsePrivateKey = errors.New("Failed to parse private key")
 )
 
-func startSshDaemon(port int, mappings []Mapping) error {
+func startSshDaemon(port int, mappings []handlers.Mapping) error {
 	privateBytes, err := ioutil.ReadFile("id_rsa")
 	if err != nil {
 		return errNoPrivateKey
@@ -60,13 +62,13 @@ func startSshDaemon(port int, mappings []Mapping) error {
 	return nil
 }
 
-func handleChannels(chans <-chan ssh.NewChannel, mappings []Mapping) {
+func handleChannels(chans <-chan ssh.NewChannel, mappings []handlers.Mapping) {
 	for newChannel := range chans {
 		go handleChannel(newChannel, mappings)
 	}
 }
 
-func handleChannel(newChannel ssh.NewChannel, mappings []Mapping) {
+func handleChannel(newChannel ssh.NewChannel, mappings []handlers.Mapping) {
 	if t := newChannel.ChannelType(); t != "session" {
 		newChannel.Reject(ssh.UnknownChannelType, fmt.Sprintf("unknown channel type: %s", t))
 		return
@@ -89,8 +91,8 @@ func handleChannel(newChannel ssh.NewChannel, mappings []Mapping) {
 				var err error
 
 				for _, mapping := range mappings {
-					if command == mapping.url {
-						output, err = toJson(withApi(mapping.handler))
+					if command == mapping.Url {
+						output, err = toJson(withApi(mapping.Handler))
 						break
 					}
 				}

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 
+	"github.com/dgageot/docker-machine-daemon/handlers"
 	"github.com/dgageot/docker-machine-daemon/ls"
 	"github.com/docker/machine/commands/mcndirs"
 	"github.com/docker/machine/libmachine"
@@ -15,13 +16,8 @@ const (
 	httpPort = 8080
 )
 
-type Mapping struct {
-	url     string
-	handler func(api libmachine.API) (interface{}, error)
-}
-
 func main() {
-	mappings := []Mapping{
+	mappings := []handlers.Mapping{
 		{"/machine/ls", runLs},
 	}
 

@@ -7,14 +7,15 @@ import (
 
 	"net/http"
 
+	"github.com/dgageot/docker-machine-daemon/handlers"
 	"github.com/gorilla/mux"
 )
 
-func startHttpServer(port int, mappings []Mapping) error {
+func startHttpServer(port int, mappings []handlers.Mapping) error {
 	r := mux.NewRouter()
 
 	for _, mapping := range mappings {
-		r.HandleFunc(mapping.url, toHandlerFunc(mapping.handler))
+		r.HandleFunc(mapping.Url, toHandlerFunc(mapping.Handler))
 	}
 
 	http.ListenAndServe(fmt.Sprintf(":%d", port), r)
