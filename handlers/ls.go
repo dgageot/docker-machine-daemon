@@ -23,7 +23,7 @@ const (
 )
 
 // RunLs lists all Docker Machines.
-func RunLs(api libmachine.API) (interface{}, error) {
+func RunLs(api libmachine.API, args... string) (interface{}, error) {
 	hostList, hostInError, err := persist.LoadAllHosts(api)
 	if err != nil {
 		return nil, err

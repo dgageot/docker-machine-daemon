@@ -15,7 +15,7 @@ const (
 
 func main() {
 	mappings := []handlers.Mapping{
-		{"/machine/ls", handlers.RunLs},
+		handlers.NewMappingFunc("/machine/ls", handlers.RunLs),
 	}
 
 	go func() {

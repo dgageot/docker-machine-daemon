@@ -3,8 +3,6 @@ package http
 import (
 	"fmt"
 
-	"github.com/docker/machine/libmachine"
-
 	"net/http"
 
 	"github.com/dgageot/docker-machine-daemon/daemon"
@@ -34,7 +32,7 @@ func (d *httpDaemon) Start(port int) error {
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), r)
 }
 
-func toHandler(handler func(api libmachine.API) (interface{}, error)) http.HandlerFunc {
+func toHandler(handler handlers.Handler) http.HandlerFunc {
 	return func(response http.ResponseWriter, request *http.Request) {
 		output, err := handlers.ToJson(handlers.WithApi(handler))
 		if err != nil {
