@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	StateTimeoutDuration = 10 * time.Second
+	lsTimeoutDuration = 10 * time.Second
 )
 
 // RunLs lists all Docker Machines.
@@ -29,47 +29,43 @@ func RunLs(api libmachine.API) (interface{}, error) {
 		return nil, err
 	}
 
-	return listItems(hostList, hostInError), nil
+	return listHosts(hostList, hostInError), nil
 }
 
-func listItems(hostList []*host.Host, hostsInError map[string]error) []commands.HostListItem {
-	hostListItems := []commands.HostListItem{}
-	hostListItemsChan := make(chan commands.HostListItem)
-
-	for _, h := range hostList {
-		go getHostState(h, hostListItemsChan)
+func listHosts(validHosts []*host.Host, hostsInError map[string]error) []commands.HostListItem {
+	itemChan := make(chan commands.HostListItem)
+	for _, h := range validHosts {
+		go getHostItem(h, itemChan)
 	}
+	close(itemChan)
 
-	for range hostList {
-		hostListItems = append(hostListItems, <-hostListItemsChan)
+	hosts := []commands.HostListItem{}
+	for range validHosts {
+		hosts = append(hosts, <-itemChan)
 	}
-
-	close(hostListItemsChan)
 
 	for name, err := range hostsInError {
-		itemInError := commands.HostListItem{
+		hosts = append(hosts, commands.HostListItem{
 			Name:       name,
 			DriverName: "not found",
 			State:      state.Error,
 			Error:      err.Error(),
-		}
-
-		hostListItems = append(hostListItems, itemInError)
+		})
 	}
 
-	return hostListItems
+	return hosts
 }
 
-func getHostState(h *host.Host, hostListItemsChan chan<- commands.HostListItem) {
+func getHostItem(h *host.Host, itemChan chan<- commands.HostListItem) {
 	hosts := make(chan commands.HostListItem)
 
-	go attemptGetHostState(h, hosts)
+	go attemptGetHostItem(h, hosts)
 
 	select {
 	case hli := <-hosts:
-		hostListItemsChan <- hli
-	case <-time.After(StateTimeoutDuration):
-		hostListItemsChan <- commands.HostListItem{
+		itemChan <- hli
+	case <-time.After(lsTimeoutDuration):
+		itemChan <- commands.HostListItem{
 			Name:       h.Name,
 			DriverName: h.Driver.DriverName(),
 			State:      state.Timeout,
@@ -80,7 +76,7 @@ func getHostState(h *host.Host, hostListItemsChan chan<- commands.HostListItem) 
 // PERFORMANCE: The code of this function is complicated because we try
 // to call the underlying drivers as less as possible to get the information
 // we need.
-func attemptGetHostState(h *host.Host, stateQueryChan chan<- commands.HostListItem) {
+func attemptGetHostItem(h *host.Host, stateQueryChan chan<- commands.HostListItem) {
 	url := ""
 	currentState := state.None
 	dockerVersion := "Unknown"

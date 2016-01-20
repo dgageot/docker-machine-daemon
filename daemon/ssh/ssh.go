@@ -1,21 +1,19 @@
-package daemons
+package ssh
 
 import (
+	"errors"
 	"fmt"
-	"log"
-
-	"github.com/dgageot/docker-machine-daemon/handlers"
-
 	"io/ioutil"
+	"log"
 	"net"
 
-	"errors"
-
+	"github.com/dgageot/docker-machine-daemon/daemon"
+	"github.com/dgageot/docker-machine-daemon/handlers"
 	"golang.org/x/crypto/ssh"
 )
 
 var (
-	errNoPrivateKey = errors.New("Failed to load private key (./id_rsa). You can generate a keypair with 'ssh-keygen -t rsa -f id_rsa'")
+	errNoPrivateKey    = errors.New("Failed to load private key (./id_rsa). You can generate a keypair with 'ssh-keygen -t rsa -f id_rsa'")
 	errParsePrivateKey = errors.New("Failed to parse private key")
 )
 
@@ -23,14 +21,14 @@ type sshDaemon struct {
 	mappings []handlers.Mapping
 }
 
-// NewSshDaemon create a new ssh daemon with given mappings.
-func NewSshDaemon(mappings []handlers.Mapping) Starter {
+// NewDaemon create a new ssh daemon with given mappings.
+func NewDaemon(mappings []handlers.Mapping) daemon.Starter {
 	return &sshDaemon{
 		mappings: mappings,
 	}
 }
 
-// Start startsth ssh daemon.
+// Start starts the ssh daemon.
 func (d *sshDaemon) Start(port int) error {
 	privateBytes, err := ioutil.ReadFile("id_rsa")
 	if err != nil {

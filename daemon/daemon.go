@@ -1,4 +1,4 @@
-package daemons
+package daemon
 
 // Starter can be started on a given port.
 type Starter interface {
