@@ -14,24 +14,36 @@ const (
 )
 
 func main() {
-	mappings := []handlers.Mapping{
-		handlers.NewMappingFunc("/machine/ls", handlers.RunLs),
-	}
-
 	go func() {
+		mappings := []handlers.Mapping{
+			handlers.NewMappingFunc("/machine/ls", handlers.Ls),
+			handlers.NewMappingFunc("/machine/start", handlers.Start),
+			handlers.NewMappingFunc("/machine/stop", handlers.Stop),
+			handlers.NewMappingFunc("/machine/restart", handlers.Restart),
+		}
+		daemon := ssh.NewDaemon(mappings)
+
 		log.Printf("Listening on %d...\n", sshPort)
 		log.Printf(" - List the Docker Machines with: ssh localhost -p %d -s /machine/ls\n", sshPort)
 
-		if err := ssh.NewDaemon(mappings).Start(sshPort); err != nil {
+		if err := daemon.Start(sshPort); err != nil {
 			log.Fatal(err)
 		}
 	}()
 
 	go func() {
+		mappings := []handlers.Mapping{
+			handlers.NewMappingFunc("/machine/ls", handlers.Ls),
+			handlers.NewMappingFunc("/machine/{machine}/start", handlers.Start),
+			handlers.NewMappingFunc("/machine/{machine}/stop", handlers.Stop),
+			handlers.NewMappingFunc("/machine/{machine}/restart", handlers.Restart),
+		}
+		daemon := http.NewDaemon(mappings)
+
 		log.Printf("Listening on %d...\n", httpPort)
 		log.Printf(" - List the Docker Machines with: http GET http://localhost:%d/machine/ls\n", httpPort)
 
-		if err := http.NewDaemon(mappings).Start(httpPort); err != nil {
+		if err := daemon.Start(httpPort); err != nil {
 			log.Fatal(err)
 		}
 	}()

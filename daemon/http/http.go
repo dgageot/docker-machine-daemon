@@ -34,7 +34,17 @@ func (d *httpDaemon) Start(port int) error {
 
 func toHandler(handler handlers.Handler) http.HandlerFunc {
 	return func(response http.ResponseWriter, request *http.Request) {
-		output, err := handlers.ToJson(handlers.WithApi(handler))
+		args := []string{}
+
+		vars := mux.Vars(request)
+		if vars != nil {
+			// TODO
+			if name, present := vars["machine"]; present {
+				args = append(args, name)
+			}
+		}
+
+		output, err := handlers.ToJson(handlers.WithApi(handler, args...))
 		if err != nil {
 			response.WriteHeader(500)
 		} else {

@@ -22,8 +22,8 @@ const (
 	lsTimeoutDuration = 10 * time.Second
 )
 
-// RunLs lists all Docker Machines.
-func RunLs(api libmachine.API, args... string) (interface{}, error) {
+// Ls lists all Docker Machines.
+func Ls(api libmachine.API, args... string) (interface{}, error) {
 	hostList, hostInError, err := persist.LoadAllHosts(api)
 	if err != nil {
 		return nil, err
@@ -37,12 +37,13 @@ func listHosts(validHosts []*host.Host, hostsInError map[string]error) []command
 	for _, h := range validHosts {
 		go getHostItem(h, itemChan)
 	}
-	close(itemChan)
 
 	hosts := []commands.HostListItem{}
 	for range validHosts {
 		hosts = append(hosts, <-itemChan)
 	}
+
+	close(itemChan)
 
 	for name, err := range hostsInError {
 		hosts = append(hosts, commands.HostListItem{

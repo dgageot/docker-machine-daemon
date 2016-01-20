@@ -7,6 +7,11 @@ import (
 	"github.com/docker/machine/libmachine"
 )
 
+type Success struct {
+	Action string
+	Name   string
+}
+
 type Mapping struct {
 	Url     string
 	Handler Handler
@@ -30,12 +35,12 @@ func (f HandlerFunc) Handle(api libmachine.API, args ...string) (interface{}, er
 	return f(api, args...)
 }
 
-func WithApi(handler Handler) func() (interface{}, error) {
+func WithApi(handler Handler, args ...string) func() (interface{}, error) {
 	return func() (interface{}, error) {
 		api := libmachine.NewClient(mcndirs.GetBaseDir(), mcndirs.GetMachineCertDir())
 		defer api.Close()
 
-		return handler.Handle(api, []string{}...)
+		return handler.Handle(api, args...)
 	}
 }
 

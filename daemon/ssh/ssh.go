@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"regexp"
+	"strings"
 
 	"github.com/dgageot/docker-machine-daemon/daemon"
 	"github.com/dgageot/docker-machine-daemon/handlers"
@@ -13,6 +15,8 @@ import (
 )
 
 var (
+	regexpCommandLine = regexp.MustCompile("('[^']*')|(\\S+)")
+
 	errNoPrivateKey    = errors.New("Failed to load private key (./id_rsa). You can generate a keypair with 'ssh-keygen -t rsa -f id_rsa'")
 	errParsePrivateKey = errors.New("Failed to parse private key")
 )
@@ -46,7 +50,7 @@ func (d *sshDaemon) Start(port int) error {
 
 	config.AddHostKey(private)
 
-	listener, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", port))
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return fmt.Errorf("Failed to listen on %d (%s)", port, err)
 	}
@@ -94,7 +98,12 @@ func (d *sshDaemon) handleChannel(newChannel ssh.NewChannel) {
 		for req := range requests {
 			switch req.Type {
 			case "subsystem":
-				command := string(req.Payload[4:])
+				commandLine := string(req.Payload[4:])
+				parts := parseFields(commandLine)
+
+				command := parts[0]
+				args := parts[1:]
+
 				req.Reply(true, nil)
 
 				var output []byte = []byte("UNKNOWN")
@@ -102,7 +111,7 @@ func (d *sshDaemon) handleChannel(newChannel ssh.NewChannel) {
 
 				for _, mapping := range d.mappings {
 					if command == mapping.Url {
-						output, err = handlers.ToJson(handlers.WithApi(mapping.Handler))
+						output, err = handlers.ToJson(handlers.WithApi(mapping.Handler, args...))
 						break
 					}
 				}
@@ -114,8 +123,19 @@ func (d *sshDaemon) handleChannel(newChannel ssh.NewChannel) {
 
 				connection.Write(output)
 				connection.Close()
-				log.Printf("Session closed")
 			}
 		}
 	}()
+}
+
+func parseFields(commandLine string) []string {
+	fields := regexpCommandLine.FindAllString(commandLine, -1)
+
+	for i := range fields {
+		if len(fields[i]) > 2 && strings.HasPrefix(fields[i], "'") && strings.HasSuffix(fields[i], "'") {
+			fields[i] = fields[i][1 : len(fields[i])-1]
+		}
+	}
+
+	return fields
 }
