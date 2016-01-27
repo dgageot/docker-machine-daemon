@@ -9,7 +9,7 @@ run: build
 
 build: $(BIN)
 
-docker-machine-daemon: main.go daemon/*.go daemon/ssh/*.go daemon/http/*.go handlers/*.go
+$(BIN): main.go daemon/*.go daemon/ssh/*.go daemon/http/*.go handlers/*.go
 	go build .
 
 deps:
