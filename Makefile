@@ -16,5 +16,5 @@ deps:
 	godep save
 
 clean:
-	rm $(BIN)
+	rm -f $(BIN)
 
