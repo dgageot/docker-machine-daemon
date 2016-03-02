@@ -5,10 +5,11 @@ import (
 	"github.com/docker/machine/libmachine/host"
 )
 
-func loadOneMachine(api libmachine.API, args ...string) (*host.Host, error) {
-	if len(args) != 1 {
+func loadOneMachine(api libmachine.API, args map[string]string) (*host.Host, error) {
+	name, present := args["name"]
+	if !present {
 		return nil, errRequireMachineName
 	}
 
-	return api.Load(args[0])
+	return api.Load(name)
 }

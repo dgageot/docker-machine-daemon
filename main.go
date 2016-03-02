@@ -12,13 +12,12 @@ const (
 )
 
 func main() {
-	mappings := []handlers.Mapping{
-		handlers.NewMappingFunc("/machine/ls", handlers.Ls),
-		handlers.NewMappingFunc("/machine/{machine}/start", handlers.Start),
-		handlers.NewMappingFunc("/machine/{machine}/stop", handlers.Stop),
-		handlers.NewMappingFunc("/machine/{machine}/restart", handlers.Restart),
-	}
-	daemon := http.NewDaemon(mappings)
+	daemon := http.NewDaemon(
+		handlers.NewMapping("/machine/ls", handlers.Ls),
+		handlers.NewMapping("/machine/{name}/start", handlers.Start),
+		handlers.NewMapping("/machine/{name}/stop", handlers.Stop),
+		handlers.NewMapping("/machine/{name}/restart", handlers.Restart),
+	)
 
 	log.Printf("Listening on %d...\n", httpPort)
 	log.Printf(" - List the Docker Machines with: http GET http://localhost:%d/machine/ls\n", httpPort)

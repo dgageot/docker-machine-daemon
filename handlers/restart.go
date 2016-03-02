@@ -3,8 +3,8 @@ package handlers
 import "github.com/docker/machine/libmachine"
 
 // Restart restarts a Docker Machine
-func Restart(api libmachine.API, args ...string) (interface{}, error) {
-	h, err := loadOneMachine(api, args...)
+func Restart(api libmachine.API, args map[string]string) (interface{}, error) {
+	h, err := loadOneMachine(api, args)
 	if err != nil {
 		return nil, err
 	}

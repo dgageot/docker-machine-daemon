@@ -15,7 +15,7 @@ type httpDaemon struct {
 }
 
 // NewDaemon create a new http daemon with given mappings.
-func NewDaemon(mappings []handlers.Mapping) daemon.Starter {
+func NewDaemon(mappings ...handlers.Mapping) daemon.Starter {
 	return &httpDaemon{
 		mappings: mappings,
 	}
@@ -34,22 +34,18 @@ func (d *httpDaemon) Start(port int) error {
 
 func toHandler(handler handlers.Handler) http.HandlerFunc {
 	return func(response http.ResponseWriter, request *http.Request) {
-		args := []string{}
-
 		vars := mux.Vars(request)
-		if vars != nil {
-			// TODO
-			if name, present := vars["machine"]; present {
-				args = append(args, name)
-			}
+		if vars == nil {
+			vars = map[string]string{}
 		}
 
-		output, err := handlers.ToJson(handlers.WithApi(handler, args...))
+		output, err := handlers.ToJson(handlers.WithApi(handler, vars))
 		if err != nil {
 			response.WriteHeader(500)
-		} else {
-			response.Header().Set("Content-Type", "application/json")
-			response.Write(output)
+			return
 		}
+
+		response.Header().Set("Content-Type", "application/json")
+		response.Write(output)
 	}
 }
