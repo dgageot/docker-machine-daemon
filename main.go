@@ -13,7 +13,7 @@ const (
 
 func main() {
 	daemon := http.NewDaemon(
-		handlers.NewMapping("GET", "/machine/ls", handlers.Ls),
+		handlers.NewMapping("GET", "/machine", handlers.Ls),
 		handlers.NewMapping("POST", "/machine/{name}/start", handlers.Start),
 		handlers.NewMapping("POST", "/machine/{name}/stop", handlers.Stop),
 		handlers.NewMapping("POST", "/machine/{name}/restart", handlers.Restart),
@@ -22,7 +22,7 @@ func main() {
 	)
 
 	log.Printf("Listening on %d...\n", httpPort)
-	log.Printf(" - List the Docker Machines with: http GET http://localhost:%d/machine/ls\n", httpPort)
+	log.Printf(" - List the Docker Machines with: http GET http://localhost:%d/machine\n", httpPort)
 
 	if err := daemon.Start(httpPort); err != nil {
 		log.Fatal(err)

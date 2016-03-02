@@ -1,13 +1,10 @@
 ## A server for Docker Machine.
 
-Currently I play with two options:
-
- + An http server
- + An ssh server using ssh subsystems
+An http server that exposes the Docker Machine actions.
  
 ## Installation
 
-    GO15VENDOREXPERIMENT=1 go get github.com/dgageot/docker-machine-daemon
+    go get -u github.com/dgageot/docker-machine-daemon
 
 ## Build from sources
 
@@ -16,3 +13,30 @@ Currently I play with two options:
 ## Run
 
     ./docker-machine-daemon
+
+## Samples
+
+### List machines
+
+    http --timeout 60 GET http://localhost:8080/machine
+
+### Create machine
+
+    http --timeout 60 --form PUT http://localhost:8080/machine/name driver=virtualbox
+
+### Start machine
+
+    http --timeout 60 POST http://localhost:8080/machine/name/start
+
+### Stop machine
+
+    http --timeout 60 POST http://localhost:8080/machine/name/stop
+
+### Restart machine
+
+    http --timeout 60 POST http://localhost:8080/machine/name/restart
+
+### Remove machine
+
+    http --timeout 60 POST http://localhost:8080/machine/name/remove
+
