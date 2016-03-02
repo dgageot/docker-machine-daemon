@@ -3,9 +3,14 @@ package handlers
 import (
 	"encoding/json"
 
+	"sync"
+
 	"github.com/docker/machine/commands/mcndirs"
 	"github.com/docker/machine/libmachine"
 )
+
+// libmachine is not thread safe, specially when it saves machines to the disk
+var globalMutex = &sync.Mutex{}
 
 type Success struct {
 	Action string
@@ -34,6 +39,9 @@ func (f HandlerFunc) Handle(api libmachine.API, args map[string]string, form map
 
 func WithApi(handler Handler, args map[string]string, form map[string][]string) func() (interface{}, error) {
 	return func() (interface{}, error) {
+		globalMutex.Lock()
+		defer globalMutex.Unlock()
+
 		api := libmachine.NewClient(mcndirs.GetBaseDir(), mcndirs.GetMachineCertDir())
 		defer api.Close()
 
