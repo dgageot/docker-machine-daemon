@@ -76,12 +76,12 @@ func (h *Host) CreateSSHClient() (ssh.Client, error) {
 func (creator *StandardSSHClientCreator) CreateSSHClient(d drivers.Driver) (ssh.Client, error) {
 	addr, err := d.GetSSHHostname()
 	if err != nil {
-		return ssh.ExternalClient{}, err
+		return &ssh.ExternalClient{}, err
 	}
 
 	port, err := d.GetSSHPort()
 	if err != nil {
-		return ssh.ExternalClient{}, err
+		return &ssh.ExternalClient{}, err
 	}
 
 	auth := &ssh.Auth{}
@@ -104,6 +104,15 @@ func (h *Host) runActionForState(action func() error, desiredState state.State) 
 	return mcnutils.WaitFor(drivers.MachineInState(h.Driver, desiredState))
 }
 
+func (h *Host) WaitForDocker() error {
+	provisioner, err := provision.DetectProvisioner(h.Driver)
+	if err != nil {
+		return err
+	}
+
+	return provision.WaitForDocker(provisioner, engine.DefaultPort)
+}
+
 func (h *Host) Start() error {
 	log.Infof("Starting %q...", h.Name)
 	if err := h.runActionForState(h.Driver.Start, state.Running); err != nil {
@@ -111,7 +120,8 @@ func (h *Host) Start() error {
 	}
 
 	log.Infof("Machine %q was started.", h.Name)
-	return nil
+
+	return h.WaitForDocker()
 }
 
 func (h *Host) Stop() error {
@@ -137,17 +147,19 @@ func (h *Host) Kill() error {
 func (h *Host) Restart() error {
 	log.Infof("Restarting %q...", h.Name)
 	if drivers.MachineInState(h.Driver, state.Stopped)() {
-		return h.Start()
-	}
-
-	if drivers.MachineInState(h.Driver, state.Running)() {
+		if err := h.Start(); err != nil {
+			return err
+		}
+	} else if drivers.MachineInState(h.Driver, state.Running)() {
 		if err := h.Driver.Restart(); err != nil {
 			return err
 		}
-		return mcnutils.WaitFor(drivers.MachineInState(h.Driver, state.Running))
+		if err := mcnutils.WaitFor(drivers.MachineInState(h.Driver, state.Running)); err != nil {
+			return err
+		}
 	}
 
-	return nil
+	return h.WaitForDocker()
 }
 
 func (h *Host) Upgrade() error {

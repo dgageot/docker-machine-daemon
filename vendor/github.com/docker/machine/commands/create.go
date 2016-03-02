@@ -45,7 +45,7 @@ var (
 		cli.StringFlag{
 			Name:   "engine-install-url",
 			Usage:  "Custom URL to use for engine installation",
-			Value:  "https://get.docker.com",
+			Value:  drivers.DefaultEngineInstallURL,
 			EnvVar: "MACHINE_DOCKER_INSTALL_URL",
 		},
 		cli.StringSliceFlag{
@@ -59,9 +59,10 @@ var (
 			Value: &cli.StringSlice{},
 		},
 		cli.StringSliceFlag{
-			Name:  "engine-registry-mirror",
-			Usage: "Specify registry mirrors to use",
-			Value: &cli.StringSlice{},
+			Name:   "engine-registry-mirror",
+			Usage:  "Specify registry mirrors to use",
+			Value:  &cli.StringSlice{},
+			EnvVar: "ENGINE_REGISTRY_MIRROR",
 		},
 		cli.StringSliceFlag{
 			Name:  "engine-label",
@@ -115,6 +116,10 @@ var (
 			Name:  "swarm-addr",
 			Usage: "addr to advertise for Swarm (default: detect and use the machine IP)",
 			Value: "",
+		},
+		cli.BoolFlag{
+			Name:  "swarm-experimental",
+			Usage: "Enable Swarm experimental features",
 		},
 		cli.StringSliceFlag{
 			Name:  "tls-san",
@@ -190,6 +195,7 @@ func cmdCreateInner(c CommandLine, api libmachine.API) error {
 			Host:           c.String("swarm-host"),
 			Strategy:       c.String("swarm-strategy"),
 			ArbitraryFlags: c.StringSlice("swarm-opt"),
+			IsExperimental: c.Bool("swarm-experimental"),
 		},
 	}
 
@@ -235,7 +241,7 @@ func cmdCreateInner(c CommandLine, api libmachine.API) error {
 		return fmt.Errorf("Error attempting to save store: %s", err)
 	}
 
-	log.Infof("To see how to connect Docker to this machine, run: %s", fmt.Sprintf("%s env %s", os.Args[0], name))
+	log.Infof("To see how to connect your Docker Client to the Docker Engine running on this virtual machine, run: %s env %s", os.Args[0], name)
 
 	return nil
 }

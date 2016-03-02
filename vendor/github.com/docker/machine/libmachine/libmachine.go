@@ -75,7 +75,7 @@ func (api *Client) NewHost(driverName string, rawDriver []byte) (*host.Host, err
 				ServerKeyPath:    filepath.Join(api.GetMachinesDir(), "server-key.pem"),
 			},
 			EngineOptions: &engine.Options{
-				InstallURL:    "https://get.docker.com",
+				InstallURL:    drivers.DefaultEngineInstallURL,
 				StorageDriver: "aufs",
 				TLSVerify:     true,
 			},
@@ -123,7 +123,9 @@ func (api *Client) Create(h *host.Host) error {
 	log.Info("Running pre-create checks...")
 
 	if err := h.Driver.PreCreateCheck(); err != nil {
-		return mcnerror.ErrDuringPreCreate{err}
+		return mcnerror.ErrDuringPreCreate{
+			Cause: err,
+		}
 	}
 
 	if err := api.Save(h); err != nil {
@@ -158,11 +160,6 @@ func (api *Client) performCreate(h *host.Host) error {
 	log.Info("Waiting for machine to be running, this may take a few minutes...")
 	if err := mcnutils.WaitFor(drivers.MachineInState(h.Driver, state.Running)); err != nil {
 		return fmt.Errorf("Error waiting for machine to be running: %s", err)
-	}
-
-	log.Info("Machine is running, waiting for SSH to be available...")
-	if err := drivers.WaitForSSH(h.Driver); err != nil {
-		return fmt.Errorf("Error waiting for SSH: %s", err)
 	}
 
 	log.Info("Detecting operating system of created instance...")

@@ -164,13 +164,15 @@ func runCommand(command func(commandLine CommandLine, api libmachine.API) error)
 			if crashErr, ok := err.(crashreport.CrashError); ok {
 				crashReporter := crashreport.NewCrashReporter(mcndirs.GetBaseDir(), context.GlobalString("bugsnag-api-token"))
 				crashReporter.Send(crashErr)
+
+				if _, ok := crashErr.Cause.(mcnerror.ErrDuringPreCreate); ok {
+					osExit(3)
+					return
+				}
 			}
 
-			if _, ok := err.(mcnerror.ErrDuringPreCreate); ok {
-				osExit(3)
-			} else {
-				osExit(1)
-			}
+			osExit(1)
+			return
 		}
 	}
 }
@@ -193,6 +195,13 @@ var Commands = []cli.Command{
 		Name:   "active",
 		Usage:  "Print which machine is active",
 		Action: runCommand(cmdActive),
+		Flags: []cli.Flag{
+			cli.IntFlag{
+				Name:  "timeout, t",
+				Usage: fmt.Sprintf("Timeout in seconds, default to %ds", activeDefaultTimeout),
+				Value: activeDefaultTimeout,
+			},
+		},
 	},
 	{
 		Name:        "config",
@@ -226,7 +235,7 @@ var Commands = []cli.Command{
 			},
 			cli.StringFlag{
 				Name:  "shell",
-				Usage: "Force environment to be configured for a specified shell: [fish, cmd, powershell], default is sh/bash",
+				Usage: "Force environment to be configured for a specified shell: [fish, cmd, powershell], default is auto-detect",
 			},
 			cli.BoolFlag{
 				Name:  "unset, u",
@@ -279,7 +288,7 @@ var Commands = []cli.Command{
 			},
 			cli.IntFlag{
 				Name:  "timeout, t",
-				Usage: fmt.Sprintf("Timeout in seconds, default to %s", stateTimeoutDuration),
+				Usage: fmt.Sprintf("Timeout in seconds, default to %ds", lsDefaultTimeout),
 				Value: lsDefaultTimeout,
 			},
 			cli.StringFlag{
