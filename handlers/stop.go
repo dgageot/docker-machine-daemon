@@ -7,7 +7,7 @@ import (
 )
 
 // Stop stops a Docker Machine
-func Stop(api libmachine.API, args map[string]string) (interface{}, error) {
+func Stop(api libmachine.API, args map[string]string, form map[string][]string) (interface{}, error) {
 	h, err := loadOneMachine(api, args)
 	if err != nil {
 		return nil, err

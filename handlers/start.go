@@ -7,7 +7,7 @@ import (
 )
 
 // Start starts a Docker Machine
-func Start(api libmachine.API, args map[string]string) (interface{}, error) {
+func Start(api libmachine.API, args map[string]string, form map[string][]string) (interface{}, error) {
 	h, err := loadOneMachine(api, args)
 	if err != nil {
 		return nil, err

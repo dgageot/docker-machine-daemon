@@ -5,6 +5,8 @@ import (
 
 	"net/http"
 
+	"log"
+
 	"github.com/dgageot/docker-machine-daemon/daemon"
 	"github.com/dgageot/docker-machine-daemon/handlers"
 	"github.com/gorilla/mux"
@@ -34,13 +36,15 @@ func (d *httpDaemon) Start(port int) error {
 
 func toHandler(handler handlers.Handler) http.HandlerFunc {
 	return func(response http.ResponseWriter, request *http.Request) {
-		vars := mux.Vars(request)
-		if vars == nil {
-			vars = map[string]string{}
+		if err := request.ParseForm(); err != nil {
+			log.Print(err)
+			response.WriteHeader(500)
+			return
 		}
 
-		output, err := handlers.ToJson(handlers.WithApi(handler, vars))
+		output, err := handlers.ToJson(handlers.WithApi(handler, mux.Vars(request), request.PostForm))
 		if err != nil {
+			log.Print(err)
 			response.WriteHeader(500)
 			return
 		}

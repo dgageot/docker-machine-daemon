@@ -23,7 +23,7 @@ const (
 )
 
 // Ls lists all Docker Machines.
-func Ls(api libmachine.API, args map[string]string) (interface{}, error) {
+func Ls(api libmachine.API, args map[string]string, form map[string][]string) (interface{}, error) {
 	hostList, hostInError, err := persist.LoadAllHosts(api)
 	if err != nil {
 		return nil, err
