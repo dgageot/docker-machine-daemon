@@ -13,12 +13,13 @@ type Success struct {
 }
 
 type Mapping struct {
+	Method  string
 	Url     string
 	Handler Handler
 }
 
-func NewMapping(url string, handler HandlerFunc) Mapping {
-	return Mapping{url, handler}
+func NewMapping(method string, url string, handler HandlerFunc) Mapping {
+	return Mapping{method, url, handler}
 }
 
 type Handler interface {

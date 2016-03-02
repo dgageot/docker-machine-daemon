@@ -26,7 +26,7 @@ func (d *httpDaemon) Start(port int) error {
 	r := mux.NewRouter()
 
 	for _, mapping := range d.mappings {
-		r.Handle(mapping.Url, toHandler(mapping.Handler))
+		r.NewRoute().Path(mapping.Url).Handler(toHandler(mapping.Handler)).Methods(mapping.Method)
 	}
 
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), r)

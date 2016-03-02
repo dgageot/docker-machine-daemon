@@ -13,10 +13,10 @@ const (
 
 func main() {
 	daemon := http.NewDaemon(
-		handlers.NewMapping("/machine/ls", handlers.Ls),
-		handlers.NewMapping("/machine/{name}/start", handlers.Start),
-		handlers.NewMapping("/machine/{name}/stop", handlers.Stop),
-		handlers.NewMapping("/machine/{name}/restart", handlers.Restart),
+		handlers.NewMapping("GET", "/machine/ls", handlers.Ls),
+		handlers.NewMapping("POST", "/machine/{name}/start", handlers.Start),
+		handlers.NewMapping("POST", "/machine/{name}/stop", handlers.Stop),
+		handlers.NewMapping("POST", "/machine/{name}/restart", handlers.Restart),
 	)
 
 	log.Printf("Listening on %d...\n", httpPort)
