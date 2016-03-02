@@ -1,6 +1,10 @@
 package handlers
 
-import "github.com/docker/machine/libmachine"
+import (
+	"strings"
+
+	"github.com/docker/machine/libmachine"
+)
 
 // Stop stops a Docker Machine
 func Stop(api libmachine.API, args map[string]string) (interface{}, error) {
@@ -10,7 +14,10 @@ func Stop(api libmachine.API, args map[string]string) (interface{}, error) {
 	}
 
 	if err := h.Stop(); err != nil {
-		return nil, err
+		// TODO: machine should return a type error
+		if !strings.Contains(err.Error(), "is already stopped") {
+			return nil, err
+		}
 	}
 
 	return Success{"stopped", h.Name}, nil
