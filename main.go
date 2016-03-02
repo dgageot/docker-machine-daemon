@@ -18,6 +18,7 @@ func main() {
 		handlers.NewMapping("POST", "/machine/{name}/stop", handlers.Stop),
 		handlers.NewMapping("POST", "/machine/{name}/restart", handlers.Restart),
 		handlers.NewMapping("PUT", "/machine/{name}", handlers.Create),
+		handlers.NewMapping("POST", "/machine/{name}/remove", handlers.Remove),
 	)
 
 	log.Printf("Listening on %d...\n", httpPort)
