@@ -32,6 +32,7 @@ func Ls(api libmachine.API, args map[string]string, form map[string][]string) (i
 	return listHosts(hostList, hostInError), nil
 }
 
+// TODO: export this in docker-machine
 func listHosts(validHosts []*host.Host, hostsInError map[string]error) []commands.HostListItem {
 	itemChan := make(chan commands.HostListItem)
 	for _, h := range validHosts {
