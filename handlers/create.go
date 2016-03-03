@@ -18,6 +18,7 @@ import (
 	"github.com/docker/machine/libmachine/mcnerror"
 	"github.com/docker/machine/libmachine/mcnflag"
 	"github.com/docker/machine/libmachine/swarm"
+	"github.com/docker/machine/commands"
 )
 
 // Create creates a Docker Machine
@@ -108,7 +109,7 @@ func createMachine(api libmachine.API, name string, driver string, form map[stri
 	}
 
 	mcnFlags := h.Driver.GetCreateFlags()
-	opts, err := parseFlags(form, mcnFlags, sharedCreateFlags)
+	opts, err := parseFlags(form, mcnFlags, commands.SharedCreateFlags)
 	if err != nil {
 		return err
 	}
@@ -203,103 +204,6 @@ func parseFlags(form map[string][]string, mcnflags []mcnflag.Flag, cliFlags []cl
 
 	return driverOpts, nil
 }
-
-// TODO: this should be public on docker-machine
-var (
-	sharedCreateFlags = []cli.Flag{
-		cli.StringFlag{
-			Name: "driver, d",
-			Usage: fmt.Sprintf(
-				"Driver to create machine with.",
-			),
-			Value: "none",
-		},
-		cli.StringFlag{
-			Name:   "engine-install-url",
-			Usage:  "Custom URL to use for engine installation",
-			Value:  drivers.DefaultEngineInstallURL,
-			EnvVar: "MACHINE_DOCKER_INSTALL_URL",
-		},
-		cli.StringSliceFlag{
-			Name:  "engine-opt",
-			Usage: "Specify arbitrary flags to include with the created engine in the form flag=value",
-			Value: &cli.StringSlice{},
-		},
-		cli.StringSliceFlag{
-			Name:  "engine-insecure-registry",
-			Usage: "Specify insecure registries to allow with the created engine",
-			Value: &cli.StringSlice{},
-		},
-		cli.StringSliceFlag{
-			Name:   "engine-registry-mirror",
-			Usage:  "Specify registry mirrors to use",
-			Value:  &cli.StringSlice{},
-			EnvVar: "ENGINE_REGISTRY_MIRROR",
-		},
-		cli.StringSliceFlag{
-			Name:  "engine-label",
-			Usage: "Specify labels for the created engine",
-			Value: &cli.StringSlice{},
-		},
-		cli.StringFlag{
-			Name:  "engine-storage-driver",
-			Usage: "Specify a storage driver to use with the engine",
-		},
-		cli.StringSliceFlag{
-			Name:  "engine-env",
-			Usage: "Specify environment variables to set in the engine",
-			Value: &cli.StringSlice{},
-		},
-		cli.BoolFlag{
-			Name:  "swarm",
-			Usage: "Configure Machine with Swarm",
-		},
-		cli.StringFlag{
-			Name:   "swarm-image",
-			Usage:  "Specify Docker image to use for Swarm",
-			Value:  "swarm:latest",
-			EnvVar: "MACHINE_SWARM_IMAGE",
-		},
-		cli.BoolFlag{
-			Name:  "swarm-master",
-			Usage: "Configure Machine to be a Swarm master",
-		},
-		cli.StringFlag{
-			Name:  "swarm-discovery",
-			Usage: "Discovery service to use with Swarm",
-			Value: "",
-		},
-		cli.StringFlag{
-			Name:  "swarm-strategy",
-			Usage: "Define a default scheduling strategy for Swarm",
-			Value: "spread",
-		},
-		cli.StringSliceFlag{
-			Name:  "swarm-opt",
-			Usage: "Define arbitrary flags for swarm",
-			Value: &cli.StringSlice{},
-		},
-		cli.StringFlag{
-			Name:  "swarm-host",
-			Usage: "ip/socket to listen on for Swarm master",
-			Value: "tcp://0.0.0.0:3376",
-		},
-		cli.StringFlag{
-			Name:  "swarm-addr",
-			Usage: "addr to advertise for Swarm (default: detect and use the machine IP)",
-			Value: "",
-		},
-		cli.BoolFlag{
-			Name:  "swarm-experimental",
-			Usage: "Enable Swarm experimental features",
-		},
-		cli.StringSliceFlag{
-			Name:  "tls-san",
-			Usage: "Support extra SANs for TLS certs",
-			Value: &cli.StringSlice{},
-		},
-	}
-)
 
 type globalFlags struct {
 	flags map[string][]string
